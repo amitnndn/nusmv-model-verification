@@ -1,0 +1,63 @@
+-- SENG 5801 - Homework 6
+-- Submitted by - Amit Nandan Periyapatna
+-- Date - 12/02/2016
+MODULE main
+
+VAR 
+--- declare input variables ---
+altitude : {Below, Between, Above, Unknown};
+altitudeQuality: {Good, Bad, Unknown};
+reset : boolean;
+inhibit : boolean;
+
+--- declare output variables ---
+doiCommand : {On, Off};
+
+--- declare state variables ---
+altitudeStatus: {Above, Below, AltitudeBad, Undefined};
+
+-- INVAR altitudeQuality=Good;
+-- INVAR reset=FALSE;
+-- INVAR inhibit=FALSE;
+
+ASSIGN
+-- Contrain Input Variables.
+	init(altitude) := Unknown;
+	next(altitude) :=
+		case
+			altitude=Below		: {Below, Between};
+			altitude=Between 	: {Below, Between, Above};
+			altitude=Above		: {Below, Above};
+			TRUE			: {Below, Between, Above};
+		esac;
+
+-- Define next state relation.
+	init(altitudeStatus) := Undefined;
+	next(altitudeStatus) :=
+		case
+			reset					: Undefined;
+			altitudeQuality=Bad			: AltitudeBad;
+			altitudeStatus!= AltitudeBad &
+			altitude=Below				: Below;
+			altitudeStatus=Undefined &
+			(altitude=Between | altitude=Above)	: Above;
+			altitudeStatus=Below &
+			altitude=Above				: Above;
+			TRUE					: altitudeStatus;
+		esac;
+
+init(doiCommand) := Off;
+next(doiCommand) := 
+	case
+		inhibit				: doiCommand;
+		next(altitudeStatus)=Below	: On;
+		next(altitudeStatus)=Above	: Off;
+		TRUE				: doiCommand;
+	esac;
+
+-- REQ 1: The DOI shall not be powered off eventhough the altitudeQuality is Bad when altitude is Below.
+SPEC AF!(altitudeQuality=Bad & altitude=Below & doiCommand = Off)
+-- REQ 2: The DOI shall remain powered On when the airplane ascends from Below the threshold to Between the Threshold and Hysterisis altitude.
+SPEC AF(altitudeStatus=Below & altitude=Below & doiCommand=On -> AF(altitude=Between &  doiCommand = On & altitudeStatus=Above))
+-- REQ 3: The DOI shall be powered off when the airplane ascends from Between Threshold and Hysterisis altitude to Above the Hysterisis altitude.
+SPEC AF(altitudeStatus=Above & altitude=Between & doiCommand=On -> AF(altitudeStatus=Above & altitude=Above & doiCommand=Off))
