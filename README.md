@@ -1,4 +1,4 @@
-<h2>NuSMV Code for Model Checker</h2>
+<h2>NuSMV Model Checker</h2>
 <p><strong>Installing NuSMV on MAC:<br/></strong>
 1. <code>$ brew search nusmv</code><small>Searches for NuSMV module</small><br/>
 2. <code>$ brew install nusmv</code><small>Install the NuSMV module</small><br/>
